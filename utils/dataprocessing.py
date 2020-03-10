@@ -16,7 +16,8 @@ class MNLI(Dataset):
         self.dataset = self.load_nli_data_genre(path, genre, snli)
 
     def __getitem__(self, idx):
-        return self.dataset[idx]
+        item = self.dataset[idx]
+        return item['sentence1'], item['sentence2'], item['label']
 
     def load_nli_data_genre(self, path, genre, snli=True):
         """

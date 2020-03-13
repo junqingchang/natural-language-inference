@@ -1,0 +1,39 @@
+
+import torch 
+
+# Download RoBERTa already finetuned for MNLI
+#https://github.com/pytorch/fairseq/tree/master/examples/roberta
+roberta = torch.hub.load('pytorch/fairseq', 'roberta.large.mnli')
+roberta.eval()  # disable dropout for evaluation
+
+with torch.no_grad():
+    # Encode a pair of sentences and make a prediction
+    tokens = roberta.encode('Roberta is a heavily optimized version of BERT.', 'Roberta is not very optimized.')
+    prediction = roberta.predict('mnli', tokens).argmax().item()
+    assert prediction == 0  # contradiction
+
+    # Encode another pair of sentences
+    tokens = roberta.encode('Roberta is a heavily optimized version of BERT.', 'Roberta is based on BERT.')
+    prediction = roberta.predict('mnli', tokens).argmax().item()
+    assert prediction == 2  # entailment
+    
+    
+     
+#------------evaluating the roberta.large.mnli model, from template
+#https://github.com/pytorch/fairseq/tree/master/examples/roberta
+label_map = {0: 'contradiction', 1: 'neutral', 2: 'entailment'}
+num_correct, nsamples = 0, 0
+roberta.cuda()
+roberta.eval()    
+with open('') as testset:
+    testset.readline()
+    for index, line in enumerate(testset):
+        tokens = line.strip().split('\t')
+        sentense1, sentense2, target = tokens[8], tokens[9], tokens[-1]
+        tokens = roberta.encode(sentense1, sentense2)
+        prediction = roberta.predict('mnli', tokens).argmax().item()
+        prediction_label = label_map[prediction]
+        num_correct = num_correct + int( num_correct == target )
+        nsamples = nsamples+1
+        
+print('accuracy ', float(num_correct)/float(nsamples))       

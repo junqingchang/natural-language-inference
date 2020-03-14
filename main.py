@@ -15,7 +15,7 @@ device = torch.device('cuda' if use_cuda else 'cpu')
 LEARNING_RATE = 0.01
 NUM_EPOCHS = 50
 
-def train(dataset, model, criterion, optimizer, device):
+def train(dataset, model, criterion, optimizer, device, print_every=1000):
     model.train()
 
     total_loss = 0
@@ -29,6 +29,9 @@ def train(dataset, model, criterion, optimizer, device):
 
         loss.backward()
         optimizer.step()
+
+        if i%print_every == 0:
+            print(f'{i}/{len(dataset)} Loss: {loss.item()}')
 
     return total_loss/len(dataset)
 

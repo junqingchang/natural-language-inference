@@ -59,18 +59,18 @@ class BERTMNLI(Dataset):
         self.genre = genre
         self.snli = snli
         self.dataset = self.load_nli_data_genre(path, genre, snli)
-        self.tokenizer = BertTokenizer.from_pretrained('bert-large-cased')
+        self.tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
         self.batch_size = batch_size
 
     def __getitem__(self, idx):
         if idx < self.__len__():
             sentence = [torch.tensor(self.tokenizer.encode(
-                x['sentence1'], x['sentence2'], add_special_tokens=True)) for x in self.dataset[8*idx:8*idx+8]]
-            label = [x['label'] for x in self.dataset[8*idx:8*idx+8]]
+                x['sentence1'], x['sentence2'], add_special_tokens=True)) for x in self.dataset[self.batch_size*idx:self.batch_size*idx+self.batch_size]]
+            label = [x['label'] for x in self.dataset[self.batch_size*idx:self.batch_size*idx+self.batch_size]]
         else:
             sentence = [torch.tensor(self.tokenizer.encode(
-                x['sentence1'], x['sentence2'], add_special_tokens=True)) for x in self.dataset[8*idx:]]
-            label = [x['label'] for x in self.dataset[8*idx:]]
+                x['sentence1'], x['sentence2'], add_special_tokens=True)) for x in self.dataset[self.batch_size*idx:]]
+            label = [x['label'] for x in self.dataset[self.batch_size*idx:]]
         sentence = pad_sequence(sentence, batch_first=True)
         return sentence, torch.tensor(label)
 

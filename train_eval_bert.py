@@ -13,6 +13,7 @@ use_cuda = torch.cuda.is_available()
 device = torch.device('cuda' if use_cuda else 'cpu')
 LEARNING_RATE = 3e-5
 NUM_EPOCHS = 3
+BERT_TYPE = 'bert-large-cased'
 
 def train(dataset, model, criterion, optimizer, device, print_every=1000):
     model.train()
@@ -62,11 +63,11 @@ def eval(dataset, model, device):
     return total_correct/total
 
 if __name__ == '__main__':
-    mnli = BERTMNLI(TRAIN_DATA_DIR)
-    match = BERTMNLI(MATCH_DATA_DIR)
-    mismatch = BERTMNLI(MISMATCH_DATA_DIR)
+    mnli = BERTMNLI(TRAIN_DATA_DIR, bert_type=BERT_TYPE)
+    match = BERTMNLI(MATCH_DATA_DIR, bert_type=BERT_TYPE)
+    mismatch = BERTMNLI(MISMATCH_DATA_DIR, bert_type=BERT_TYPE)
 
-    model = BERT()
+    model = BERT(bert_type=BERT_TYPE)
     model.to(device)
 
     optimizer = Adam(model.parameters(), lr = LEARNING_RATE)

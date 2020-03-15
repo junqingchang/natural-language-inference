@@ -49,7 +49,7 @@ class MNLI(Dataset):
 
 
 class BERTMNLI(Dataset):
-    def __init__(self, path, genre=False, snli=True, batch_size=8):
+    def __init__(self, path, genre=False, snli=True, batch_size=8, bert_type='bert-large-cased'):
         self.LABEL_MAP = {
             "entailment": 0,
             "neutral": 1,
@@ -59,7 +59,7 @@ class BERTMNLI(Dataset):
         self.genre = genre
         self.snli = snli
         self.dataset = self.load_nli_data_genre(path, genre, snli)
-        self.tokenizer = BertTokenizer.from_pretrained('bert-large-cased')
+        self.tokenizer = BertTokenizer.from_pretrained(bert_type)
         self.batch_size = batch_size
 
     def __getitem__(self, idx):

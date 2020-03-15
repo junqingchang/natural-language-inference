@@ -4,11 +4,15 @@ from transformers import BertModel
 
 
 class BERT(nn.Module):
-    def __init__(self, num_classes=3):
+    def __init__(self, num_classes=3, bert_type='bert-large-cased'):
         super(BERT, self).__init__()
-        self.bert = BertModel.from_pretrained('bert-large-cased')
+        assert bert_type == 'bert-large-cased' or bert_type == 'bert-base-cased'
+        self.bert = BertModel.from_pretrained(bert_type)
         self.dropout = nn.Dropout(0.1)
-        self.classifier = nn.Linear(768, num_classes)
+        if bert_type == 'bert-base-cased':
+            self.classifier = nn.Linear(768, num_classes)
+        elif bert_type == 'bert-large-cased':
+            self.classifier = nn.Linear(1024, num_classes)
 
     def forward(self, x):
         outputs = self.bert(

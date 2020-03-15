@@ -1,7 +1,6 @@
 from utils.dataprocessing import MNLI, BERTMNLI
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
 from model import BERT
 from torch.optim import Adam
 
@@ -12,8 +11,8 @@ MISMATCH_DATA_DIR = 'drive/My Drive/multinli_1.0/multinli_1.0_dev_mismatched.jso
 SAVED_MODEL_PATH = 'bert.pt'
 use_cuda = torch.cuda.is_available()
 device = torch.device('cuda' if use_cuda else 'cpu')
-LEARNING_RATE = 0.01
-NUM_EPOCHS = 50
+LEARNING_RATE = 3e-5
+NUM_EPOCHS = 3
 
 def train(dataset, model, criterion, optimizer, device, print_every=1000):
     model.train()
@@ -21,7 +20,9 @@ def train(dataset, model, criterion, optimizer, device, print_every=1000):
     total_loss = 0
     for i in range(len(dataset)):
         data, target = dataset[i]
-        data, target = data.to(device), target.to(device)
+        for key in data:
+            data[key] = data[key].to(device)
+        target = target.to(device)
         optimizer.zero_grad()
         output = model(data)
         loss = criterion(output.view((-1, 3)), target.view(-1))
@@ -32,6 +33,10 @@ def train(dataset, model, criterion, optimizer, device, print_every=1000):
 
         if i%print_every == 0:
             print(f'{i}/{len(dataset)} Loss: {loss.item()}')
+            torch.save({
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                }, 'storage/backup.pt')
 
     return total_loss/len(dataset)
 
@@ -42,7 +47,9 @@ def eval(dataset, model, device):
     total_correct = 0
     for i in range(len(dataset)):
         data, target = dataset[i]
-        data, target = data.to(device), target.to(device)
+        for key in data:
+            data[key] = data[key].to(device)
+        target = target.to(device)
         optimizer.zero_grad()
         output = model(data)
         

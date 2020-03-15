@@ -10,11 +10,11 @@ from torch.nn.utils.rnn import pad_sequence
 class MNLI(Dataset):
     def __init__(self, path, genre=False, snli=True):
         self.LABEL_MAP = {
-                        "entailment": 0,
-                        "neutral": 1,
-                        "contradiction": 2,
-                        "hidden": 0
-                    }
+            "entailment": 0,
+            "neutral": 1,
+            "contradiction": 2,
+            "hidden": 0
+        }
         self.genre = genre
         self.snli = snli
         self.dataset = self.load_nli_data_genre(path, genre, snli)
@@ -49,7 +49,7 @@ class MNLI(Dataset):
 
 
 class BERTMNLI(Dataset):
-    def __init__(self, path, genre=False, snli=True, batch_size=4):
+    def __init__(self, path, genre=False, snli=True, batch_size=8):
         self.LABEL_MAP = {
             "entailment": 0,
             "neutral": 1,
@@ -59,19 +59,23 @@ class BERTMNLI(Dataset):
         self.genre = genre
         self.snli = snli
         self.dataset = self.load_nli_data_genre(path, genre, snli)
-        self.tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
+        self.tokenizer = BertTokenizer.from_pretrained('bert-large-cased')
         self.batch_size = batch_size
 
     def __getitem__(self, idx):
         if idx < self.__len__():
-            sentence = [torch.tensor(self.tokenizer.encode(
-                x['sentence1'], x['sentence2'], add_special_tokens=True)) for x in self.dataset[self.batch_size*idx:self.batch_size*idx+self.batch_size]]
-            label = [x['label'] for x in self.dataset[self.batch_size*idx:self.batch_size*idx+self.batch_size]]
+            sentence = [[x['sentence1'], x['sentence2']]
+                        for x in self.dataset[self.batch_size*idx:self.batch_size*idx+self.batch_size]]
+            label = [x['label'] for x in self.dataset[self.batch_size *
+                                                      idx:self.batch_size*idx+self.batch_size]]
         else:
-            sentence = [torch.tensor(self.tokenizer.encode(
-                x['sentence1'], x['sentence2'], add_special_tokens=True)) for x in self.dataset[self.batch_size*idx:]]
+            sentence = [[x['sentence1'], x['sentence2']]
+                        for x in self.dataset[self.batch_size*idx:]]
             label = [x['label'] for x in self.dataset[self.batch_size*idx:]]
-        sentence = pad_sequence(sentence, batch_first=True)
+        sentence = self.tokenizer.batch_encode_plus(
+            sentence, pad_to_max_length=True, return_token_type_ids=True, return_attention_masks=True)
+        for key in sentence:
+            sentence[key] = torch.tensor(sentence[key])
         return sentence, torch.tensor(label)
 
     def __len__(self):

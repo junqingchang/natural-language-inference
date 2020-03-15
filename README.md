@@ -18,3 +18,6 @@ README.md
 The data we are using is the MultiNLI dataset from NYU which can be downloaded at the following address
 
 https://www.nyu.edu/projects/bowman/multinli/
+
+## Benchmarks
+BERT(base) Match Acc: 0.7950076413652573, Mismatch Acc:0.8078722538649309

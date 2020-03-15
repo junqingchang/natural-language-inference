@@ -9,6 +9,7 @@ MISMATCH_DATA_DIR = 'drive/My Drive/multinli_1.0/multinli_1.0_dev_mismatched.jso
 SAVED_MODEL_PATH = 'bert.pt'
 use_cuda = torch.cuda.is_available()
 device = torch.device('cuda' if use_cuda else 'cpu')
+BERT_TYPE = 'bert-large-cased'
 
 def eval(dataset, model, device):
     model.eval()
@@ -31,12 +32,12 @@ def eval(dataset, model, device):
     return total_correct/total
 
 if __name__ == '__main__':
-    match = BERTMNLI(MATCH_DATA_DIR)
-    mismatch = BERTMNLI(MISMATCH_DATA_DIR)
+    match = BERTMNLI(MATCH_DATA_DIR, bert_type=BERT_TYPE)
+    mismatch = BERTMNLI(MISMATCH_DATA_DIR, bert_type=BERT_TYPE)
 
     checkpoint = torch.load(SAVED_MODEL_PATH)
 
-    model = BERT()
+    model = BERT(bert_type=BERT_TYPE)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.to(device)
 

@@ -21,15 +21,14 @@ def train(dataset, model, criterion, optimizer, device, print_every=1000):
 
     total_loss = 0
     for i in range(len(dataset)):
-        sentences, labels = dataset[i]
+        sentences, target = dataset[i]
+        target = target.to(device)
         losses = []
-        print(i)
         for j in range(len(sentences)):
-            data, target = sentences[j], labels[j]
+            data = sentences[j]
 
             for key in data:
                 data[key] = data[key].to(device)
-            target = target.to(device)
             optimizer.zero_grad()
             output = model(data)
             loss = criterion(output.view((-1, 3)), target.view(-1))

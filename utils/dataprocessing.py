@@ -116,52 +116,35 @@ class LossEditedBERTMNLI(Dataset):
         }
         self.genre = genre
         self.snli = snli
-        self.dataset = self.load_nli_data_genre(path, genre, snli)
         self.tokenizer = BertTokenizer.from_pretrained(bert_type)
+        self.dataset = self.load_nli_data_genre(path, genre, snli)
         self.batch_size = batch_size
 
     def __getitem__(self, idx):
         if idx < self.__len__():
             sentence1 = [[x['sentence1'], x['sentence2']]
                         for x in self.dataset[self.batch_size*idx:self.batch_size*idx+self.batch_size]]
-            label1 = [x['label'] for x in self.dataset[self.batch_size *
-                                                      idx:self.batch_size*idx+self.batch_size]]
-            sentence2 = [[x['sentence1'], x['sentence1']]
+            sentence2 = [[x['sentence2'], x['sentence1']]
                         for x in self.dataset[self.batch_size*idx:self.batch_size*idx+self.batch_size]]
-            label2 = [0 for x in self.dataset[self.batch_size *
-                                                      idx:self.batch_size*idx+self.batch_size]]
-            sentence3 = [[x['sentence2'], x['sentence2']]
-                        for x in self.dataset[self.batch_size*idx:self.batch_size*idx+self.batch_size]]
-            label3 = [0 for x in self.dataset[self.batch_size *
-                                                      idx:self.batch_size*idx+self.batch_size]]
-            sentence4 = [[x['sentence2'], x['sentence1']]
-                        for x in self.dataset[self.batch_size*idx:self.batch_size*idx+self.batch_size]]
-            label4 = [x['label'] for x in self.dataset[self.batch_size *
+            label = [x['label'] for x in self.dataset[self.batch_size *
                                                       idx:self.batch_size*idx+self.batch_size]]
         else:
             sentence1 = [[x['sentence1'], x['sentence2']]
                         for x in self.dataset[self.batch_size*idx:]]
-            label1 = [x['label'] for x in self.dataset[self.batch_size*idx:]]
-            sentence2 = [[x['sentence1'], x['sentence1']]
+            sentence2 = [[x['sentence2'], x['sentence1']]
                         for x in self.dataset[self.batch_size*idx:]]
-            label2 = [0 for x in self.dataset[self.batch_size*idx:]]
-            sentence3 = [[x['sentence2'], x['sentence2']]
-                        for x in self.dataset[self.batch_size*idx:]]
-            label3 = [0 for x in self.dataset[self.batch_size*idx:]]
-            sentence4 = [[x['sentence2'], x['sentence1']]
-                        for x in self.dataset[self.batch_size*idx:]]
-            label4 = [x['label'] for x in self.dataset[self.batch_size*idx:]]
+            label = [x['label'] for x in self.dataset[self.batch_size*idx:]]
 
-        sentences = [sentence1, sentence2, sentence3, sentence4]
-        labels = [label1, label2, label3, label4]
-        sentences = [self.tokenizer.batch_encode_plus(
-            sentence, pad_to_max_length=True, return_token_type_ids=True, return_attention_masks=True) for sentence in sentences]
-        for sentence in sentences:
-            for key in sentence:
-                sentence[key] = torch.tensor(sentence[key])
-        for i in range(len(labels)):
-            labels[i] = torch.tensor(labels[i])
-        return sentences, labels
+        sentence1 = self.tokenizer.batch_encode_plus(
+            sentence1, pad_to_max_length=True, return_token_type_ids=True, return_attention_masks=True)
+        for key in sentence1:
+            sentence1[key] = torch.tensor(sentence1[key])
+        sentence2 = self.tokenizer.batch_encode_plus(
+            sentence2, pad_to_max_length=True, return_token_type_ids=True, return_attention_masks=True)
+        for key in sentence2:
+            sentence2[key] = torch.tensor(sentence2[key])
+
+        return [sentence1, sentence2], torch.tensor(label)
 
     def __len__(self):
         return math.ceil(len(self.dataset)/self.batch_size)
@@ -184,10 +167,9 @@ class LossEditedBERTMNLI(Dataset):
                     loaded_example["genre"] = "snli"
                 if genre:
                     if loaded_example["genre"] == genre:
-                        if len(loaded_example['sentence1'])*2+3 <= 512 or len(loaded_example['sentence2'])*2+3 <= 512: # Hard cap for BERT model
-                            data.append(loaded_example)
-                else:
-                    if len(loaded_example['sentence1'])*2+3 <= 512 or len(loaded_example['sentence2'])*2+3 <= 512: # Hard cap for BERT model
                         data.append(loaded_example)
+                else:
+                    data.append(loaded_example)
             random.shuffle(data)
         return data
+

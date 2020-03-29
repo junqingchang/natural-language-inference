@@ -9,7 +9,11 @@ multinli_1.0/
     ...
 utils/
     dataprocessing.py
-main.py
+model.py
+eval_bert.py
+train_eval_bert.py
+roberta_eval.py
+lossedited_bert.py
 .gitignore
 README.md
 ```
@@ -20,4 +24,5 @@ The data we are using is the MultiNLI dataset from NYU which can be downloaded a
 https://www.nyu.edu/projects/bowman/multinli/
 
 ## Benchmarks
-BERT(base) Match Acc: 0.7950076413652573, Mismatch Acc:0.8078722538649309
+BERT(base) Match Acc: 0.7950076413652573, Mismatch Acc: 0.8078722538649309
+BERT(sum loss) Match Acc: 0.801018848700968, Mismatch Acc: 0.8034987794955248

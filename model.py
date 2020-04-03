@@ -44,7 +44,7 @@ class BertEmbeddingsWithWordMasking(nn.Module):
         self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
-    def forward(self, input_ids=None, token_type_ids=None, position_ids=None, inputs_embeds=None, word_ids=None):
+    def forward(self, input_ids=None, token_type_ids=None, position_ids=None, inputs_embeds=None, word_mask=None):
         if input_ids is not None:
             input_shape = input_ids.size()
         else:
@@ -61,12 +61,12 @@ class BertEmbeddingsWithWordMasking(nn.Module):
         if inputs_embeds is None:
             inputs_embeds = self.word_embeddings(input_ids)
 
-        if word_ids is None:
-            word_ids = torch.ones(input_shape, dtype=torch.long, device=device)
+        if word_mask is None:
+            word_mask = torch.ones(input_shape, dtype=torch.long, device=device)
 
         position_embeddings = self.position_embeddings(position_ids)
         token_type_embeddings = self.token_type_embeddings(token_type_ids)
-        word_arrangement_embeddings = self.word_arrangement_embeddings(word_ids)
+        word_arrangement_embeddings = self.word_arrangement_embeddings(word_mask)
 
         embeddings = inputs_embeds + position_embeddings + token_type_embeddings + word_arrangement_embeddings
         embeddings = self.LayerNorm(embeddings)
@@ -112,6 +112,7 @@ class BertModelWithWordMasking(BertPreTrainedModel):
         inputs_embeds=None,
         encoder_hidden_states=None,
         encoder_attention_mask=None,
+        word_mask=None
     ):
 
         if input_ids is not None and inputs_embeds is not None:
@@ -129,6 +130,8 @@ class BertModelWithWordMasking(BertPreTrainedModel):
             attention_mask = torch.ones(input_shape, device=device)
         if token_type_ids is None:
             token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=device)
+        if word_mask is None:
+            word_mask = torch.zeros(input_shape, dtype=torch.long, device=device)
 
         # We can provide a self-attention mask of dimensions [batch_size, from_seq_length, to_seq_length]
         # ourselves in which case we just need to make it broadcastable to all heads.
@@ -209,7 +212,7 @@ class BertModelWithWordMasking(BertPreTrainedModel):
             head_mask = [None] * self.config.num_hidden_layers
 
         embedding_output = self.embeddings(
-            input_ids=input_ids, position_ids=position_ids, token_type_ids=token_type_ids, inputs_embeds=inputs_embeds
+            input_ids=input_ids, position_ids=position_ids, token_type_ids=token_type_ids, inputs_embeds=inputs_embeds, word_mask=word_mask
         )
         encoder_outputs = self.encoder(
             embedding_output,
@@ -256,21 +259,21 @@ class BertTokenizerWithWordMasking(BertTokenizer):
 
     def _tokenize(self, text):
         split_tokens = []
-        word_masking = []
+        word_mask = []
         first = True
         if self.do_basic_tokenize:
             for token in self.basic_tokenizer.tokenize(text, never_split=self.all_special_tokens):
                 first = True
                 for sub_token in self.wordpiece_tokenizer.tokenize(token):
                     if first:
-                        word_masking.append(1)
+                        word_mask.append(1)
                         first = False
                     else:
-                        word_masking.append(0)
+                        word_mask.append(0)
                     split_tokens.append(sub_token)
         else:
             split_tokens = self.wordpiece_tokenizer.tokenize(text)
-        return split_tokens, word_masking
+        return split_tokens, word_mask
 
     def batch_encode_plus(
         self,
@@ -292,8 +295,8 @@ class BertTokenizerWithWordMasking(BertTokenizer):
 
         def get_input_ids(text):
             if isinstance(text, str):
-                tokens, word_masking = self.tokenize(text, add_special_tokens=add_special_tokens, **kwargs)
-                return self.convert_tokens_to_ids(tokens), word_masking
+                tokens, word_mask = self.tokenize(text, add_special_tokens=add_special_tokens, **kwargs)
+                return self.convert_tokens_to_ids(tokens), word_mask
             elif isinstance(text, (list, tuple)) and len(text) > 0 and isinstance(text[0], str):
                 return self.convert_tokens_to_ids(text)
             elif isinstance(text, (list, tuple)) and len(text) > 0 and isinstance(text[0], int):
@@ -332,7 +335,7 @@ class BertTokenizerWithWordMasking(BertTokenizer):
         if max_length is None and pad_to_max_length:
 
             def total_sequence_length(input_pairs):
-                first_ids, second_ids = input_pairs
+                first_ids, second_ids, first_word_mask, second_word_mask = input_pairs
                 return len(first_ids) + (
                     self.num_added_tokens()
                     if second_ids is None
@@ -356,7 +359,8 @@ class BertTokenizerWithWordMasking(BertTokenizer):
                 return_overflowing_tokens=return_overflowing_tokens,
                 return_special_tokens_mask=return_special_tokens_masks,
             )
-            outputs['word_masking'] = [0] + first_word_mask + [0] + second_word_mask + [0]
+            outputs['word_mask'] = [0] + first_word_mask + [0] + second_word_mask + [0]
+            outputs['word_mask'] += [0] * (max_length-len(outputs['word_mask']))
             # Append the non-padded length to the output
             if return_input_lengths:
                 outputs["input_len"] = len(outputs["input_ids"])

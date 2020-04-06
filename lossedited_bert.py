@@ -1,4 +1,4 @@
-from utils.dataprocessing import LossEditedBERTMNLI, BERTMNLI
+from dataprocessing import LossEditedBERTMNLI, BERTMNLI
 import torch
 import torch.nn as nn
 from model import BERT

@@ -1,14 +1,14 @@
-from dataprocessing import MNLI, BERTMNLI
+from dataprocessing import BERTMNLIWithWordMasking
 import torch
 import torch.nn as nn
-from model import BERT
+from model import BERTWithWordMasking
 from torch.optim import Adam
 
 
 TRAIN_DATA_DIR = 'multinli_1.0/multinli_1.0_train.jsonl'
 MATCH_DATA_DIR = 'multinli_1.0/multinli_1.0_dev_matched.jsonl'
 MISMATCH_DATA_DIR = 'multinli_1.0/multinli_1.0_dev_mismatched.jsonl'
-SAVED_MODEL_PATH = 'bert.pt'
+SAVED_MODEL_PATH = 'wordmask_bert.pt'
 use_cuda = torch.cuda.is_available()
 device = torch.device('cuda' if use_cuda else 'cpu')
 LEARNING_RATE = 3e-5
@@ -37,7 +37,7 @@ def train(dataset, model, criterion, optimizer, device, print_every=1000):
             torch.save({
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                }, 'storage/backup.pt')
+                }, 'storage/wordmaskbackup.pt')
 
     return total_loss/len(dataset)
 
@@ -63,11 +63,11 @@ def eval(dataset, model, device):
     return total_correct/total
 
 if __name__ == '__main__':
-    mnli = BERTMNLI(TRAIN_DATA_DIR, bert_type=BERT_TYPE)
-    match = BERTMNLI(MATCH_DATA_DIR, bert_type=BERT_TYPE)
-    mismatch = BERTMNLI(MISMATCH_DATA_DIR, bert_type=BERT_TYPE)
+    mnli = BERTMNLIWithWordMasking(TRAIN_DATA_DIR, bert_type=BERT_TYPE)
+    match = BERTMNLIWithWordMasking(MATCH_DATA_DIR, bert_type=BERT_TYPE)
+    mismatch = BERTMNLIWithWordMasking(MISMATCH_DATA_DIR, bert_type=BERT_TYPE)
 
-    model = BERT(bert_type=BERT_TYPE)
+    model = BERTWithWordMasking(bert_type=BERT_TYPE)
     model.to(device)
 
     optimizer = Adam(model.parameters(), lr = LEARNING_RATE)

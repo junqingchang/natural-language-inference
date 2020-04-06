@@ -1,5 +1,5 @@
 import torch
-from utils.dataprocessing import MNLI
+from dataprocessing import MNLI
 roberta = torch.hub.load('pytorch/fairseq', 'roberta.large')
 roberta.eval()  # disable dropout (or leave in train mode to finetune)
 

@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from transformers import BertModel, BertPreTrainedModel, BertTokenizer
-from transformers.modeling_bert import BertEncoder, BertPooler
+from transformers import BertModel, BertPreTrainedModel, BertTokenizer, BertConfig
+from transformers.modeling_bert import BertEncoder, BertPooler, BertOnlyMLMHead
 from transformers.file_utils import is_torch_available
 import re
 import itertools
@@ -394,6 +394,65 @@ class BertTokenizerWithWordMasking(BertTokenizer):
         return batch_outputs
 
 
+class BertForMaskedLMWithWordMasking(BertPreTrainedModel):
+    def __init__(self, config):
+        super().__init__(config)
+
+        self.bert = BertModelWithWordMasking(config)
+        self.cls = BertOnlyMLMHead(config)
+
+        self.init_weights()
+
+    def get_output_embeddings(self):
+        return self.cls.predictions.decoder
+
+    def forward(
+        self,
+        input_ids=None,
+        attention_mask=None,
+        token_type_ids=None,
+        position_ids=None,
+        head_mask=None,
+        inputs_embeds=None,
+        masked_lm_labels=None,
+        encoder_hidden_states=None,
+        encoder_attention_mask=None,
+        lm_labels=None,
+        word_mask=None,
+    ):
+
+        outputs = self.bert(
+            input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+            encoder_hidden_states=encoder_hidden_states,
+            encoder_attention_mask=encoder_attention_mask,
+            word_mask=word_mask,
+        )
+
+        sequence_output = outputs[0]
+        prediction_scores = self.cls(sequence_output)
+
+        outputs = (prediction_scores,) + outputs[2:]  
+
+        if masked_lm_labels is not None:
+            loss_fct = nn.CrossEntropyLoss()  # -100 index = padding token
+            masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), masked_lm_labels.view(-1))
+            outputs = (masked_lm_loss,) + outputs
+
+        if lm_labels is not None:
+            prediction_scores = prediction_scores[:, :-1, :].contiguous()
+            lm_labels = lm_labels[:, 1:].contiguous()
+            loss_fct = nn.CrossEntropyLoss()
+            ltr_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), lm_labels.view(-1))
+            outputs = (ltr_lm_loss,) + outputs
+
+        return outputs
+
+
 class BERTWithWordMasking(nn.Module):
     def __init__(self, num_classes=3, bert_type='bert-base-cased'):
         super(BERTWithWordMasking, self).__init__()
@@ -404,6 +463,32 @@ class BERTWithWordMasking(nn.Module):
             self.classifier = nn.Linear(768, num_classes)
         elif bert_type == 'bert-large-cased':
             self.classifier = nn.Linear(1024, num_classes)
+
+    def forward(self, x):
+        outputs = self.bert(
+            x['input_ids'], attention_mask=x['attention_mask'], token_type_ids=x['token_type_ids'], word_mask=x['word_mask'])
+        pooled_output = outputs[1]
+        pooled_output = self.dropout(pooled_output)
+        logits = self.classifier(pooled_output)
+
+        return logits
+
+
+class BERTWithWordMaskingSelfPretrained(nn.Module):
+    def __init__(self, num_classes=3, pretrained_path='chkpt/maskbert.pt', tokenizer_vocab='configs/maskbert-vocab.txt'):
+        super(BERTWithWordMaskingSelfPretrained, self).__init__()
+        tokenizer = BertTokenizerWithWordMasking(tokenizer_vocab)
+        config = BertConfig(vocab_size=tokenizer.vocab_size)
+        checkpoint = torch.load(pretrained_path)
+        subcheckpoint = {}
+        for key in checkpoint['model_state_dict']:
+            if key.startswith('bert.'):
+                subcheckpoint[key[5:]] = checkpoint['model_state_dict'][key]
+        checkpoint = subcheckpoint
+        self.bert = BertModelWithWordMasking(config)
+        self.bert.load_state_dict(checkpoint)
+        self.dropout = nn.Dropout(0.1)
+        self.classifier = nn.Linear(768, num_classes)
 
     def forward(self, x):
         outputs = self.bert(

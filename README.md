@@ -29,3 +29,7 @@ BERT(base) Match Acc: 0.7950076413652573, Mismatch Acc: 0.8078722538649309
 BERT(sum loss) Match Acc: 0.801018848700968, Mismatch Acc: 0.8034987794955248
 
 Word Masking Bert Match Accuracy: 0.8002037697401936, Mismatch Accuracy: 0.8029902359641985
+
+Finetuning with DialogNLI corpus: Match Accuracy 0.7866530820173204, Mismatch Accuracy:0.7955655004068348
+
+Finetuning with MSRP corpus: Match Accuracy: 0.8008150789607743, Mismatch Accuracy:0.8045158665581774

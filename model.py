@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from transformers import BertModel, BertPreTrainedModel, BertTokenizer, BertConfig
-from transformers.modeling_bert import BertEncoder, BertPooler, BertOnlyMLMHead
+from transformers.modeling_bert import BertEncoder, BertPooler, BertOnlyMLMHead, BertEmbeddings
 from transformers.file_utils import is_torch_available
 import re
 import itertools

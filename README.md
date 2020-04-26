@@ -7,15 +7,20 @@ multinli_1.0/
     multinli_1.0_train.jsonl
     multinli_1.0_train.txt
     ...
-utils/
-    dataprocessing.py
-model.py
-eval_bert.py
-train_eval_bert.py
-roberta_eval.py
-lossedited_bert.py
+configs/
+    maskbert-vocab.txt
 .gitignore
+dataprocessing.py
+eval_roberta.py
+model.py
+pretrain_maskbert.py
 README.md
+train_eval_bert.py
+train_eval_fullmodel.py
+train_eval_lossedited_bert.py
+train_eval_maskbert.py
+train_eval_poolerlosseditedbert.py
+train_eval_pretrainedmaskbert.py
 ```
 
 ## Data
@@ -30,14 +35,18 @@ Finetune with Sum Loss, Match Acc: 0.801018848700968, Mismatch Acc: 0.8034987794
 
 Finetune with Word Activation Masking, Match Accuracy: 0.8002037697401936, Mismatch Accuracy: 0.8029902359641985
 
-Finetuning with DialogNLI corpus: Match Accuracy 0.7866530820173204, Mismatch Accuracy:0.7955655004068348
+Pretrain Word Activation Masking (1m iterations), Match Acc: 0.31818644931227713, Mismatch Acc: 0.318246541903987
 
-Finetuning with MSRP corpus: Match Accuracy: 0.8008150789607743, Mismatch Accuracy:0.8045158665581774
+Pretrain Word Activation Masking (6m iterations), Match Acc: 0.3544574630667346, Mismatch Acc: 0.3522172497965826
+
+Finetuning with DialogNLI corpus: Match Accuracy 0.7866530820173204, Mismatch Accuracy: 0.7955655004068348
+
+Finetuning with MSRP corpus: Match Accuracy: 0.8008150789607743, Mismatch Accuracy: 0.8045158665581774
 
 Finetuning with Sigmoid activation function in BertPooler: Match Acc: 0.8020376974019359, Mismatch Acc: 0.809092758340114
 
 Finetuning with ReLU activation function in BertPooler: Match Acc: 0.8011207335710647, Mismatch Acc: 0.7971928397070789
 
-Finetuning with Sum Loss + Sigmoid activation + Word Actication Masking, Match Acc: 0.801935812531839, Mismatch Acc: 0.8019731489015459
+Finetuning with Sum Loss + Sigmoid activation + Word Activation Masking, Match Acc: 0.801935812531839, Mismatch Acc: 0.8019731489015459
 
 Finetuning with Sum Loss + Sigmoid activation, Match Acc: 0.800509424350484, Mismatch Acc:0.8046175752644427

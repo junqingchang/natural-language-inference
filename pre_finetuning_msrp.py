@@ -1,4 +1,4 @@
-from utils.dataprocessing import MNLI, BERTMNLI,BERTMNLI_preFinetuning
+from dataprocessing import MNLI, BERTMNLI,BERTMNLI_preFinetuning
 import torch
 import torch.nn as nn
 from model import BERT,  BERTwithMSRP
@@ -33,7 +33,7 @@ def train(dataset, model, criterion, optimizer, device, print_every=200):
         optimizer.step()
 
         print(f'{i}/{len(dataset)} Loss: {loss.item()}')
-        if i%print_every == 0:
+        if i%(print_every*100) == 0:
             torch.save({
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),

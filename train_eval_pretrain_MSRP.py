@@ -1,4 +1,4 @@
-from utils.dataprocessing import MNLI, BERTMNLI
+from dataprocessing import MNLI, BERTMNLI
 import torch
 import torch.nn as nn
 from model import BERT
@@ -18,7 +18,7 @@ LEARNING_RATE = 3e-5
 NUM_EPOCHS = 3
 BERT_TYPE = 'bert-base-cased'
 
-def train(dataset, model, criterion, optimizer, device, print_every=100):
+def train(dataset, model, criterion, optimizer, device, print_every=200):
     model.train()
 
     total_loss = 0
@@ -38,7 +38,7 @@ def train(dataset, model, criterion, optimizer, device, print_every=100):
 
         if i%print_every == 0:
           print(f'{i}/{len(dataset)} Loss: {loss.item()}')
-        if i%(print_every*10) == 0:    
+        if i%(print_every*100) == 0:    
           torch.save({
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),

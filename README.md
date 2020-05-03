@@ -11,15 +11,25 @@ configs/
     maskbert-vocab.txt
 .gitignore
 dataprocessing.py
+load_dnli.py
+load_msrp.py
+model_attention.py
+model_pooler.py
 eval_roberta.py
 model.py
+pre_finetuning_DNLI.py
+pre_finetuning_msrp.py
 pretrain_maskbert.py
 README.md
+train_eval_attentionsigmoid.py
 train_eval_bert.py
 train_eval_fullmodel.py
 train_eval_lossedited_bert.py
 train_eval_maskbert.py
 train_eval_poolerlosseditedbert.py
+train_eval_poolersigmoid.py
+train_eval_pretrain_DNLI.py
+train_eval_pretrain_MSRP.py
 train_eval_pretrainedmaskbert.py
 ```
 

@@ -1,7 +1,7 @@
-from utils.dataprocessing import BERTMNLI
+from dataprocessing import BERTMNLI
 import torch
 import torch.nn as nn
-from model_pooler import BERTWithWordMasking,BERT_withPoolActivation
+from model_pooler import BERT_withPoolActivation
 from torch.optim import Adam
 
 
